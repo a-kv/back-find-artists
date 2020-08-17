@@ -1,20 +1,10 @@
 import express from 'express'
 import User from '../models/userModel'
 import {getToken, isAuth} from '../utils'
-
-let secured = require('../middleware/getUser');
 const bcrypt = require("bcryptjs");
 
 
 export const router = express.Router();
-
-// router.get('/u', secured(), function (req, res, next) {
-//     const { _raw, _json, ...userProfile } = req.user;
-//     res.render('user', {
-//         userProfile: JSON.stringify(userProfile, null, 2),
-//         title: 'Profile page'
-//     });
-// });
 
 router.put('/:id', isAuth, async (req, res) => {
     const userId = req.params.id;
@@ -39,8 +29,8 @@ router.put('/:id', isAuth, async (req, res) => {
 
 router.post('/register', async (req, res) => {
     // hashing password
-    let hash = bcrypt.hashSync(req.body.password, 14);
-    req.body.password = hash
+    // let hash = bcrypt.hashSync(req.body.password, 14);
+    // req.body.password = hash
 
     const user = new User(req.body)
     // const user = new User({
@@ -67,15 +57,15 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
     const loginUser = await User.findOne({
-        email: req.body.email
-        // password: req.body.password,
-    // }, (err, user) => {
-    //     if (!loginUser || !bcrypt.compareSync(req.body.password, loginUser.password)) {
-    //         return res.render('login',{
-    //             error: 'Invalid email or password.'
-    //         })
-    //     }
-    //     req.session.userId = user._id
+        email: req.body.email,
+        password: req.body.password,
+        // }, (err, user) => {
+        //     if (!loginUser || !bcrypt.compareSync(req.body.password, loginUser.password)) {
+        //         return res.render('login',{
+        //             error: 'Invalid email or password.'
+        //         })
+        //     }
+        //     req.session.userId = user._id
 
     });
     try {
@@ -89,29 +79,24 @@ router.post('/login', async (req, res) => {
         });
     } catch {
         res.status(401).send({message: 'Invalid email or password.'});
-    // }
-}});
+        // }
+    }
+});
 
-
-router.get('/', async (req, res) => {
+router.get('/users', async (req, res) => {
+    const users = await User.find({});
     try {
-        res.send({message: "Server works well!"});
+        const userMap = {};
+        users.forEach((user) => {
+            userMap[user._id] = user;
+        });
+
+        res.send(userMap);
+        // res.send({users: users}, {message: "Server works well!"});
     } catch (error) {
         res.send({message: error.message});
     }
 });
-// router.get('/', async (req, res) => {
-//     try {
-//         const user = new User({
-//             name: 'Anna',
-//             email: 'test123456@mail.ru',
-//             password: 'test1234566',
-//             isArtist: true,
-//         });
-//         const newUser = await user.save();
-//         res.send(newUser);
-//     } catch (error) {
-//         res.send({message: error.message});
-//     }
-// });
+
+
 export default router;
